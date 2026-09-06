@@ -5,6 +5,8 @@ import './advisory-road-picker.css';
 
 const API_ROOT = 'http://localhost:3000/api/v1';
 const initialCenter = [6.6885, -1.6244];
+const CARTO_BASEMAP_KEY = import.meta.env.VITE_CARTO_BASEMAP_KEY;
+const CARTO_LIGHT_TILES = `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAP_KEY}`;
 
 function boundsForLeaflet(bounds) {
   return { west: bounds.getWest(), south: bounds.getSouth(), east: bounds.getEast(), north: bounds.getNorth() };
@@ -47,7 +49,7 @@ export default function AdvisoryRoadPicker({ selectedRoadId, onSelect }) {
   return <div className="advisory-road-picker">
     <div className="advisory-road-picker-heading"><strong>Select the affected road</strong><span>{message}</span></div>
     <MapContainer center={initialCenter} zoom={13} minZoom={12} className="advisory-road-map" scrollWheelZoom>
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' url={CARTO_LIGHT_TILES} />
       <ViewportListener onBoundsChange={loadRoads} />
       {roads.map((road) => {
         const positions = road.geometry?.coordinates?.map(([longitude, latitude]) => [latitude, longitude]) ?? [];

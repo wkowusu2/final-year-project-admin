@@ -46,3 +46,4 @@ app-example
 .codex/
 AGENTS.md
 CLAUDE.md
+.env

@@ -18,6 +18,8 @@ function ViewportListener({ onBoundsChange }) {
 
 const API_ROOT = 'http://localhost:3000/api/v1';
 const SESSION_KEY = 'roadpulse.admin.session';
+const CARTO_BASEMAP_KEY = import.meta.env.VITE_CARTO_BASEMAP_KEY;
+const CARTO_LIGHT_TILES = `https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAP_KEY}`;
 
 async function trafficRequest(url) {
   const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
@@ -63,7 +65,7 @@ export default function TrafficMap() {
 
   return <div className="live-map-wrap">
     <MapContainer center={initialCenter} zoom={13} className="live-map" scrollWheelZoom>
-      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' url={CARTO_LIGHT_TILES} />
       <ViewportListener onBoundsChange={update} />
       {roads.map((road) => {
         const coordinates = road.geometry?.coordinates?.map(([longitude, latitude]) => [latitude, longitude]) ?? [];
