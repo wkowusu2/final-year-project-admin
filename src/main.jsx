@@ -17,9 +17,12 @@ const level = (speed) => speed == null ? ['No speed', 'moderate'] : speed < 12 ?
 const relativeTime = (iso) => { const minutes = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return minutes < 1 ? 'Just now' : minutes < 60 ? `${minutes} min ago` : `${Math.round(minutes / 60)} hr ago`; };
 
 async function refreshSession(session) {
-  if (!refreshPromise) refreshPromise = fetch(`${ROOT}/auth/admin/refresh`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken: session.refreshToken, adminId: session.admin.id }) }).then(async (response) => {
+  if (!refreshPromise) refreshPromise = fetch(`${ROOT}/auth/admin/refresh`, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refreshToken: session.refreshToken, adminId: session.admin.id }) }).then(async (response) => {
     const body = await response.json();
     if (!response.ok || !body.success) throw new Error(body.error || 'Session expired');
+    if (typeof body.data?.access_token !== 'string' || typeof body.data?.refresh_token !== 'string' || body.data.access_token === session.accessToken) {
+      throw new Error('Session refresh did not issue a new access token. Please sign in again.');
+    }
     const next = { ...session, accessToken: body.data.access_token, refreshToken: body.data.refresh_token };
     saveSession(next); return next;
   }).finally(() => { refreshPromise = null; });
@@ -28,9 +31,20 @@ async function refreshSession(session) {
 
 async function adminRequest(url, session, updateSession, options = {}) {
   const request = (token) => fetch(url, { ...options, headers: { ...(options.headers || {}), Authorization: `Bearer ${token}` } });
-  let response = await request(session.accessToken);
+  // A dashboard request may still hold an old React prop while another request
+  // has already refreshed the session. Always start with localStorage's newest
+  // token, then retry exactly once with the newly issued token.
+  const stored = loadSession();
+  const current = stored?.admin?.id === session.admin.id ? stored : session;
+  let response = await request(current.accessToken);
   if (response.status !== 401) return response;
-  const next = await refreshSession(session);
+
+  const latest = loadSession();
+  if (latest?.admin?.id === current.admin.id && latest.accessToken !== current.accessToken) {
+    return request(latest.accessToken);
+  }
+
+  const next = await refreshSession(current);
   updateSession(next);
   return request(next.accessToken);
 }
