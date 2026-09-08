@@ -1,24 +1,46 @@
-# RoadPulse Command
+# RoadPulse Command — Administrator Console
 
-Install dependencies and start the React development server:
+RoadPulse Command is the React and Vite web console for authorised RoadPulse Ghana administrators. It provides an aggregate operational view of road conditions and supports incident and advisory management.
+
+## Features
+
+- Administrator sign-in and refresh-token handling
+- Aggregate traffic dashboard and map
+- Recent incident review and status updates
+- Road-advisory creation and maintenance
+- Route and simulation presentation views
+
+## Prerequisites
+
+- Node.js and npm
+- A running RoadPulse backend, normally available at `http://localhost:3000`
+- A valid administrator account provisioned through the backend/database
+
+## Setup and run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Sign in through the admin login page. The seeded administrator is:
+Vite prints the local development URL after startup. To create and preview a production bundle:
 
-```text
-admin@roadplus.com
-password123
+```bash
+npm run build
+npm run preview
 ```
 
-The app stores the returned access and refresh tokens locally. If the dashboard receives a 401 response, it requests a rotated refresh token once and retries the original dashboard request.
+## Configuration
 
-The authenticated dashboard request is:
+The application currently calls the backend at `http://localhost:3000/api/v1`. This value is defined in `src/main.jsx`, `src/TrafficMap.jsx` and `src/AdvisoryRoadPicker.jsx`; update all three locations when deploying to another environment.
 
-```text
-GET /api/v1/admin/dashboard?windowMinutes=30
-Authorization: Bearer <admin access token>
-```
+The optional `VITE_CARTO_BASEMAP_KEY` value in `.env` is used by the map presentation. Do not commit real API keys or administrator credentials to a public repository.
+
+## Security note
+
+The console stores authenticated session data locally to support token refresh. Production deployment should use HTTPS, restricted API origins, strong administrator credentials, secure token-storage review and appropriate session-expiry controls.
+
+## Related projects
+
+- [`../backend`](../backend): API, dashboard data, incident and advisory endpoints
+- [`../driverApp/move_with_vim`](../driverApp/move_with_vim): driver-facing mobile application
